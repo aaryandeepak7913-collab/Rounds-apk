@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D0E0F">
+<title>Rounds</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="boxing-theme">
+
+<header class="topbar">
+  <div class="brand"><span class="glove-icon pulse-glove" aria-hidden="true">🥊</span><span class="brand-text">ROUNDS</span></div>
+  <div class="streak-card" title="Current streak"><span class="streak-num" id="streakCount">0</span><span class="streak-label">day streak</span></div>
+  <div class="topbar-actions">
+    <button class="icon-btn" id="recapBtn" title="Monthly recap" aria-label="Monthly recap">📊</button>
+    <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">⚙</button>
+  </div>
+</header>
+
+<main class="content">
+
+  <section class="timer-panel" id="timerPanel">
+    <div class="timer-header"><span class="glove-icon" aria-hidden="true">🥊</span><h2>Round timer</h2></div>
+    <div class="timer-display-container">
+      <div class="timer-phase" id="timerPhase">READY</div>
+      <div class="timer-clock" id="timerClock">00:00</div>
+      <div class="timer-round-info" id="timerRoundInfo"></div>
+    </div>
+    <div class="timer-name-row">
+      <input type="text" id="timerExerciseName" placeholder="What are you working on? (optional)" aria-label="Exercise name">
+      <button class="icon-btn timer-mic" id="timerVoiceMicBtn" aria-label="Say the exercise name">🎤</button>
+    </div>
+    <div class="timer-controls">
+      <button class="btn-primary btn-boxing" id="startTimerBtn">Start</button>
+      <button class="btn-secondary" id="pauseTimerBtn">Pause</button>
+      <button class="btn-secondary" id="resetTimerBtn">Reset</button>
+    </div>
+    <div class="preset-row">
+      <select id="presetSelect" aria-label="Round presets"><option value="">Load a preset…</option></select>
+      <button class="btn-secondary" id="savePresetBtn">Save preset</button>
+      <button class="btn-danger" id="deletePresetBtn">Delete</button>
+    </div>
+    <div class="timer-settings-grid">
+      <div class="setting-item"><label for="prepTime">Prep (sec)</label><input type="number" id="prepTime" value="10" min="0"></div>
+      <div class="setting-item"><label for="workTime">Work (min)</label><input type="number" id="workTime" value="3" min="0.5" step="0.5"></div>
+      <div class="setting-item"><label for="restTime">Rest (min)</label><input type="number" id="restTime" value="1" min="0" step="0.5"></div>
+      <div class="setting-item"><label for="totalRounds">Rounds</label><input type="number" id="totalRounds" value="3" min="1"></div>
+    </div>
+  </section>
+
+  <section class="countdown-panel">
+    <div class="countdown-display">
+      <span class="countdown-num" id="countdownNum">—</span>
+      <span class="countdown-label">days to <span id="countdownName">no competition set</span></span>
+    </div>
+    <button class="btn-secondary" id="editCountdownBtn">Edit</button>
+    <div class="countdown-edit hidden" id="countdownEdit">
+      <input type="text" id="countdownNameInput" placeholder="Competition name" aria-label="Competition name">
+      <input type="date" id="countdownDateInput" aria-label="Competition date">
+      <button class="btn-primary" id="saveCountdownBtn">Save</button>
+      <button class="btn-danger" id="clearCountdownBtn">Clear</button>
+    </div>
+  </section>
+
+  <section class="calendar-panel">
+    <div class="calendar-header">
+      <button class="nav-btn" id="prevMonth" aria-label="Previous month">‹</button>
+      <h2 id="monthLabel">Month</h2>
+      <button class="nav-btn" id="nextMonth" aria-label="Next month">›</button>
+    </div>
+    <div class="weekday-row"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+    <div class="record-card">
+      <div><span class="stat-num" id="currentStreakStat">0</span><span class="stat-label">current streak</span></div>
+      <div><span class="stat-num" id="longestStreakStat">0</span><span class="stat-label">longest streak</span></div>
+      <div><span class="stat-num" id="totalSessionsStat">0</span><span class="stat-label">sessions</span></div>
+    </div>
+  </section>
+
+  <section class="log-panel">
+    <div class="log-empty" id="logEmpty">
+      <p>Pick a day on the calendar, or log today's training.</p>
+      <div class="empty-actions">
+        <button class="btn-primary" id="logTodayBtn">Log today</button>
+        <button class="btn-voice" id="voiceQuickBtn"><span class="mic-dot"></span> Quick voice log</button>
+      </div>
+    </div>
+
+    <div class="log-editor hidden" id="logEditor">
+      <div class="log-header"><h3 id="logDateLabel">Today</h3><button class="icon-btn" id="closeLogBtn" aria-label="Close">✕</button></div>
+
+      <div class="voice-bar">
+        <button class="voice-btn" id="voiceSummaryBtn"><span class="mic-dot"></span> Record summary</button>
+        <button class="voice-btn" id="voiceLiveBtn"><span class="mic-dot"></span> Log live</button>
+        <button class="voice-btn" id="voiceQuickBtnInline"><span class="mic-dot"></span> Quick log</button>
+        <span class="voice-status" id="voiceStatus"></span>
+      </div>
+
+      <div class="entries-list" id="entriesList"></div>
+
+      <div class="manual-add">
+        <div class="manual-row">
+          <select id="manualType" aria-label="Type">
+            <option value="strength">Strength</option><option value="cardio">Cardio</option><option value="boxing">Boxing</option><option value="custom">Custom</option>
+          </select>
+          <input type="text" id="manualName" placeholder="Exercise name" aria-label="Exercise name">
+        </div>
+        <div class="manual-row" id="manualStrengthRow">
+          <input type="number" id="manualSets" placeholder="Sets" aria-label="Sets">
+          <input type="number" id="manualReps" placeholder="Reps" aria-label="Reps">
+          <input type="number" id="manualWeight" placeholder="Weight" aria-label="Weight">
+          <select id="manualWeightUnit" aria-label="Weight unit"><option value="kg">kg</option><option value="lb">lb</option></select>
+        </div>
+        <div class="manual-row hidden" id="manualCardioRow">
+          <input type="number" id="manualDistance" placeholder="Distance" step="0.1" aria-label="Distance">
+          <select id="manualDistanceUnit" aria-label="Distance unit"><option value="km">km</option><option value="mi">mi</option></select>
+          <input type="number" id="manualDuration" placeholder="Minutes" aria-label="Duration in minutes">
+        </div>
+        <div class="manual-row hidden" id="manualBoxingRow">
+          <input type="number" id="manualRounds" placeholder="Rounds" aria-label="Rounds">
+          <input type="number" id="manualRoundLength" placeholder="Minutes per round" step="0.5" aria-label="Minutes per round">
+        </div>
+        <div class="manual-row hidden" id="manualCustomRow">
+          <label class="chip"><input type="checkbox" id="customUseSetsReps"> Sets / reps</label>
+          <label class="chip"><input type="checkbox" id="customUseDuration"> Duration</label>
+          <label class="chip"><input type="checkbox" id="customUseDistance"> Distance</label>
+        </div>
+        <div class="manual-row hidden" id="manualCustomSetsRepsRow">
+          <input type="number" id="customSets" placeholder="Sets" aria-label="Sets"><input type="number" id="customReps" placeholder="Reps" aria-label="Reps">
+        </div>
+        <div class="manual-row hidden" id="manualCustomDurationRow">
+          <input type="number" id="customDuration" placeholder="Minutes" aria-label="Duration in minutes">
+        </div>
+        <div class="manual-row hidden" id="manualCustomDistanceRow">
+          <input type="number" id="customDistance" placeholder="Distance" step="0.1" aria-label="Distance">
+          <select id="customDistanceUnit" aria-label="Distance unit"><option value="km">km</option><option value="mi">mi</option></select>
+        </div>
+        <div class="manual-row">
+          <input type="text" id="manualNote" placeholder="Note (optional)" aria-label="Note">
+          <button class="btn-secondary" id="manualAddBtn">Add</button>
+          <button class="btn-secondary hidden" id="cancelEditBtn">Cancel</button>
+        </div>
+      </div>
+
+      <textarea id="sessionNotes" placeholder="How did it go? Notes for the day." aria-label="Session notes" rows="3"></textarea>
+      <div class="log-footer"><span class="save-status" id="saveStatus"></span><button class="btn-primary" id="saveLogBtn">Save round</button></div>
+    </div>
+  </section>
+
+  <section class="weight-panel">
+    <h2 class="panel-title">Weigh-ins</h2>
+    <div class="weight-form">
+      <input type="date" id="weightDate" aria-label="Date">
+      <input type="number" id="weightValue" placeholder="Weight" step="0.1" aria-label="Weight">
+      <select id="weightUnit" aria-label="Weight unit"><option value="kg">kg</option><option value="lb">lb</option></select>
+      <button class="btn-primary" id="addWeightBtn">Log</button>
+    </div>
+    <svg class="weight-chart" id="weightChart" viewBox="0 0 400 140" preserveAspectRatio="none" role="img" aria-label="Weight over time"></svg>
+    <div class="weight-list" id="weightList"></div>
+  </section>
+
+</main>
+
+<section class="drawer hidden" id="settingsDrawer">
+  <div class="drawer-card">
+    <div class="drawer-header"><h2>Settings</h2><button class="icon-btn" id="closeSettingsBtn" aria-label="Close settings">✕</button></div>
+    <div class="settings-block">
+      <h3>Voice logging</h3>
+      <p class="muted" id="voiceSupportStatus"></p>
+      <input type="password" id="deepgramKeyInput" placeholder="Deepgram API key" aria-label="Deepgram API key" autocomplete="off">
+      <button class="btn-secondary" id="saveDeepgramKeyBtn">Save key</button>
+      <p class="muted" id="deepgramKeyStatus"></p>
+    </div>
+    <div class="settings-block">
+      <h3>Daily reminder</h3>
+      <p class="muted">A reminder arrives at 9:00 PM each day you haven't logged a workout. Change it in Android's notification settings for Rounds.</p>
+    </div>
+    <div class="settings-block">
+      <h3>Backup</h3>
+      <p class="muted">Download your rounds as a file, or restore them from one.</p>
+      <button class="btn-secondary" id="downloadBackupBtn">Download backup</button>
+      <label class="btn-secondary file-btn">Restore from file<input type="file" id="restoreFileInput" accept="application/json,.json" hidden></label>
+    </div>
+    <div class="settings-block danger-block">
+      <h3>Danger zone</h3>
+      <p class="muted">Erases every logged round on this device.</p>
+      <button class="btn-danger" id="wipeDataBtn">Erase all rounds</button>
+    </div>
+  </div>
+</section>
+
+<section class="drawer hidden" id="recapDrawer">
+  <div class="drawer-card">
+    <div class="drawer-header"><h2>Monthly recap</h2><button class="icon-btn" id="closeRecapBtn" aria-label="Close recap">✕</button></div>
+    <div class="recap-card" id="recapCard">
+      <div class="recap-month" id="recapMonth"></div>
+      <div class="recap-grid" id="recapGrid"></div>
+      <div class="recap-footer">ROUNDS</div>
+    </div>
+    <button class="btn-secondary" id="downloadRecapBtn">Save as image</button>
+  </div>
+</section>
+
+<section class="drawer hidden" id="voiceReview">
+  <div class="drawer-card">
+    <div class="drawer-header"><h2>Review voice log</h2><button class="icon-btn" id="closeVoiceReviewBtn" aria-label="Close review">✕</button></div>
+    <p class="muted">Check and edit everything before it's added.</p>
+    <div id="voiceReviewList"></div>
+    <button class="btn-primary" id="confirmVoiceEntriesBtn">Add to today</button>
+  </div>
+</section>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
