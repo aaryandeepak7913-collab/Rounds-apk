@@ -508,3 +508,14 @@ input[type="password"], input[type="date"] {
   .mic-dot, .pulse-glove, .timer-panel.phase-work .timer-display-container { animation: none; }
   .toast { animation: none; }
 }
+
+/* ---------- ALIGNMENT FIXES (phone widths) ---------- */
+.preset-row { flex-wrap: nowrap; align-items: stretch; }
+.preset-row select { min-width: 0; }
+.preset-row button { flex: none; width: auto; margin-top: 0; padding: 9px 12px; font-size: 13px; white-space: nowrap; }
+.timer-settings-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; }
+.setting-item { justify-content: flex-end; }
+.setting-item label { white-space: nowrap; letter-spacing: 0; font-size: 9.5px; text-align: center; }
+
+.goal-hit .stat-num { color: #4ADE80; }
+#weekStatBox:active { opacity: .7; }

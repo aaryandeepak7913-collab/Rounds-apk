@@ -50,7 +50,28 @@ async function idbDelete(key) {
    ========================================================= */
 let audioCtx = null;
 
+// The real boxing bell (bell.mp3) is decoded once and played through Web Audio, so it is instant and loud.
+// If the file can't be loaded, the old synthesised bell below is used instead.
+let bellBuffer = null;
+function audioContext() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+async function loadBell() {
+  try { const r = await fetch("bell.mp3"); bellBuffer = await audioContext().decodeAudioData(await r.arrayBuffer()); }
+  catch (e) { bellBuffer = null; }
+}
 function playBoxingBell() {
+  try { navigator.vibrate && navigator.vibrate([250, 120, 250, 120, 500]); } catch (e) {} // buzz with the bell
+  if (bellBuffer) {
+    const c = audioContext(), src = c.createBufferSource(), gain = c.createGain();
+    src.buffer = bellBuffer; gain.gain.value = 1; src.connect(gain); gain.connect(c.destination); src.start();
+    return;
+  }
+  playSynthBell();
+}
+function playSynthBell() {
   if (!audioCtx) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContext();
@@ -165,7 +186,18 @@ function updateStreakUI() {
   document.getElementById("longestStreakStat").textContent = state.streak.longest;
   const total = Object.values(state.sessions).filter((s) => (s.entries || []).length > 0).length;
   document.getElementById("totalSessionsStat").textContent = total;
+  // Weekly goal (Monday to Sunday). Tap the tile to change the goal.
+  const goal = parseInt(localStorage.getItem("rounds.weekGoal") || "4", 10);
+  const start = addDays(todayStr(), -((new Date().getDay() + 6) % 7));
+  let wk = 0;
+  for (let i = 0; i < 7; i++) if ((state.sessions[addDays(start, i)]?.entries || []).length > 0) wk++;
+  const wkEl = document.getElementById("weekStat");
+  if (wkEl) { wkEl.textContent = `${wk}/${goal}`; wkEl.parentElement.classList.toggle("goal-hit", wk >= goal); }
 }
+document.getElementById("weekStatBox")?.addEventListener("click", () => {
+  const g = (parseInt(localStorage.getItem("rounds.weekGoal") || "4", 10) % 7) + 1;
+  localStorage.setItem("rounds.weekGoal", String(g)); updateStreakUI(); toast(`Weekly goal: ${g} sessions`);
+});
 
 /* =========================================================
    TOAST
@@ -463,7 +495,7 @@ function entrySummaryText(e) {
     else if (e.sets) parts.push(`${e.sets} sets`);
     else if (e.reps) parts.push(`${e.reps} reps`);
     if (e.weight) parts.push(`${e.weight}${e.weightUnit || "kg"}`);
-    return `${name} - ${parts.join(" at ") || "logged"}`;
+    return `${name} - ${parts.join(" at ") || "logged"}${e.pr ? "  ·  PR" : ""}`;
   }
   if (e.type === "cardio") {
     const parts = [];
@@ -648,6 +680,16 @@ on("saveLogBtn", "click", async () => {
   } else {
     state.sessions[state.selectedDate] = { entries: state.draftEntries, notes, updatedAt: Date.now() };
   }
+  // Personal records: a strength lift is a PR when it beats the heaviest earlier lift of the same exercise.
+  const kg = (e) => (e.weightUnit === "lb" ? e.weight * 0.4536 : e.weight);
+  const nm = (e) => String(e.name || "").trim().toLowerCase();
+  (state.sessions[state.selectedDate]?.entries || []).forEach((e) => {
+    e.pr = false;
+    if (e.type !== "strength" || !e.weight || !nm(e)) return;
+    let best = 0;
+    Object.entries(state.sessions).forEach(([d, s]) => { if (d !== state.selectedDate) (s.entries || []).forEach((x) => { if (x.type === "strength" && x.weight && nm(x) === nm(e)) best = Math.max(best, kg(x)); }); });
+    if (best > 0 && kg(e) > best + 0.01) { e.pr = true; toast(`New PR: ${cleanEntryName(e.name, "Lift")} ${e.weight}${e.weightUnit || "kg"}`); }
+  });
   recomputeStreak();
   await saveSessions();
   updateStreakUI();
@@ -1349,6 +1391,7 @@ on("wipeDataBtn", "click", async () => {
    INITIALIZATION
    ========================================================= */
 async function init() {
+  loadBell();
   document.querySelector(".formcheck-panel")?.remove();
   document.getElementById("geminiKeyInput")?.closest(".settings-block")?.remove();
   await loadSessions();
